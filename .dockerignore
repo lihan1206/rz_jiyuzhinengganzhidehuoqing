@@ -1,0 +1,17 @@
+.git
+.gitignore
+**/node_modules
+**/dist
+**/build
+**/.DS_Store
+**/.vscode
+**/.idea
+**/__pycache__
+**/.pytest_cache
+**/.venv
+**/venv
+**/target
+**/tests
+**/__tests__
+**/*.py
+release

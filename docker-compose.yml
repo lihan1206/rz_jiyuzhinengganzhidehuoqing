@@ -1,0 +1,64 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: fire_control_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fire_control
+      TZ: Asia/Shanghai
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      fire_net:
+        aliases:
+          - db
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: fire_control_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 8000
+      DATABASE_URL: mysql://root:root@db:3306/fire_control
+      LOG_LEVEL: info
+      TZ: Asia/Shanghai
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    networks:
+      fire_net:
+        aliases:
+          - backend
+
+  frontend:
+    build: ./frontend
+    container_name: fire_control_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    networks:
+      fire_net:
+        aliases:
+          - frontend
+
+volumes:
+  mysql_data:
+
+networks:
+  fire_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.66.0.0/24

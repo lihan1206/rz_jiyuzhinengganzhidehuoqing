@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum FireIntensity {
+  low
+  medium
+  high
+}
+
+enum FireEventStatus {
+  detected
+  extinguished
+  failed
+}
+
+enum RobotWorkStatus {
+  moving
+  idle
+  working
+  charging
+}
+
+model FireEvent {
+  id            Int             @id @default(autoincrement())
+  eventTime     DateTime
+  locationX     Float
+  locationY     Float
+  locationZ     Float
+  fireIntensity FireIntensity
+  sensorData    Json
+  actionTaken   String?
+  status        FireEventStatus @default(detected)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  logs          OperationLog[]
+}
+
+model RobotStatus {
+  id          Int             @id @default(autoincrement())
+  robotId     String          @unique
+  positionX   Float
+  positionY   Float
+  orientation Float
+  batteryLevel Int
+  status      RobotWorkStatus @default(idle)
+  lastUpdated DateTime        @updatedAt
+}
+
+model OperationLog {
+  id          Int       @id @default(autoincrement())
+  eventType   String
+  description String
+  timestamp   DateTime  @default(now())
+  userName    String?
+  robotId     String?
+  fireEventId Int?
+  fireEvent   FireEvent? @relation(fields: [fireEventId], references: [id], onDelete: SetNull)
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+}
